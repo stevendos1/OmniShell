@@ -1,0 +1,93 @@
+# =============================================================================
+# OmniShell Orchestrator — Development Configuration
+# =============================================================================
+# Optimized for local development: uses echo as a test agent,
+# tool execution enabled in dry-run mode.
+
+config_version = "dev-v1"
+max_concurrency = 4
+
+# -----------------------------------------------------------------------------
+# Test agent using echo (always available on any system)
+# -----------------------------------------------------------------------------
+[[agents]]
+id = "echo-agent"
+display_name = "Echo Agent"
+binary = "echo"
+base_args = ["{PROMPT}"]
+input_mode = "arg"
+prompt_placeholder = "{PROMPT}"
+output_format = "text"
+timeout_seconds = 5
+max_concurrency = 4
+priority = 1
+capabilities = ["general", "code-generation", "summarization", "test"]
+enabled = true
+env_vars = []
+
+# -----------------------------------------------------------------------------
+# Cache: small, short TTL for development
+# -----------------------------------------------------------------------------
+[cache]
+enabled = true
+max_entries = 50
+max_bytes = 5242880      # 5 MiB
+ttl_seconds = 300        # 5 minutes
+
+# -----------------------------------------------------------------------------
+# Context: smaller limits for fast iteration
+# -----------------------------------------------------------------------------
+[context]
+max_messages = 10
+max_bytes = 65536         # 64 KiB
+max_tokens = 2000
+enable_summarization = false
+
+# -----------------------------------------------------------------------------
+# Token budgets: generous for dev
+# -----------------------------------------------------------------------------
+[token_budget]
+per_request_limit = 4000
+per_session_limit = 20000
+
+# -----------------------------------------------------------------------------
+# Retry: fewer retries in dev
+# -----------------------------------------------------------------------------
+[retry_policy]
+max_retries = 1
+backoff_multiplier = 1.5
+
+[retry_policy.base_delay]
+secs = 0
+nanos = 500000000        # 0.5s
+
+[retry_policy.max_delay]
+secs = 5
+nanos = 0
+
+# -----------------------------------------------------------------------------
+# Tool executor: dry-run mode for safety
+# -----------------------------------------------------------------------------
+[tool_executor]
+enabled = true
+allowed_commands = ["ls", "cat", "echo", "pwd", "date"]
+denied_commands = ["rm", "dd"]
+working_dir = "/tmp"
+dry_run = true             # Commands logged but not executed
+max_stdout_bytes = 65536   # 64 KiB
+max_stderr_bytes = 16384   # 16 KiB
+
+[tool_executor.timeout]
+secs = 10
+nanos = 0
+
+# -----------------------------------------------------------------------------
+# Policy: relaxed for dev (still catches obvious injections)
+# -----------------------------------------------------------------------------
+[policy]
+enabled = true
+max_input_bytes = 50000
+enable_redaction = false
+suspicious_patterns = [
+    '(?i)ignore\s+(all\s+)?(previous|above)\s+instructions',
+]

@@ -1,0 +1,147 @@
+# =============================================================================
+# OmniShell Orchestrator — Main Configuration
+# =============================================================================
+# This file configures the orchestrator, agents, cache, budgets, and security.
+# All CLI flags/args are placeholders — replace with real values for your setup.
+
+config_version = "v1"
+max_concurrency = 8
+
+# -----------------------------------------------------------------------------
+# Agent: Claude CLI (placeholder)
+# -----------------------------------------------------------------------------
+[[agents]]
+id = "claude-cli"
+display_name = "Claude CLI"
+binary = "claude"                         # Replace with actual binary path
+base_args = ["--output-format", "json"]   # Replace with actual flags
+input_mode = "stdin"
+output_format = "json"
+json_content_path = "result"              # Adjust to match actual JSON schema
+timeout_seconds = 120
+max_concurrency = 3
+priority = 10
+capabilities = ["code-generation", "summarization", "code-review", "general"]
+enabled = true
+env_vars = [
+    { name = "ANTHROPIC_API_KEY", value = "$ANTHROPIC_API_KEY" },
+]
+
+# -----------------------------------------------------------------------------
+# Agent: Codex CLI (placeholder)
+# -----------------------------------------------------------------------------
+[[agents]]
+id = "codex-cli"
+display_name = "Codex CLI"
+binary = "codex"                          # Replace with actual binary path
+base_args = ["--quiet"]                   # Replace with actual flags
+input_mode = "stdin"
+output_format = "text"
+timeout_seconds = 180
+max_concurrency = 2
+priority = 5
+capabilities = ["code-generation", "code-review"]
+enabled = false                            # Disabled until configured
+env_vars = [
+    { name = "OPENAI_API_KEY", value = "$OPENAI_API_KEY" },
+]
+
+# -----------------------------------------------------------------------------
+# Agent: Gemini CLI (placeholder)
+# -----------------------------------------------------------------------------
+[[agents]]
+id = "gemini-cli"
+display_name = "Gemini CLI"
+binary = "gemini"                         # Replace with actual binary path
+base_args = ["{PROMPT}"]                  # Replace with actual flags
+input_mode = "arg"
+prompt_placeholder = "{PROMPT}"
+output_format = "auto"
+timeout_seconds = 90
+max_concurrency = 2
+priority = 3
+capabilities = ["summarization", "general"]
+enabled = false                            # Disabled until configured
+env_vars = [
+    { name = "GOOGLE_API_KEY", value = "$GOOGLE_API_KEY" },
+]
+
+# -----------------------------------------------------------------------------
+# Cache Configuration
+# -----------------------------------------------------------------------------
+[cache]
+enabled = true
+max_entries = 1000
+max_bytes = 52428800     # 50 MiB
+ttl_seconds = 3600       # 1 hour
+
+# -----------------------------------------------------------------------------
+# Context Manager Configuration
+# -----------------------------------------------------------------------------
+[context]
+max_messages = 50
+max_bytes = 524288        # 512 KiB
+max_tokens = 8000
+enable_summarization = true
+
+# -----------------------------------------------------------------------------
+# Token Budget Configuration
+# -----------------------------------------------------------------------------
+[token_budget]
+per_request_limit = 8000
+per_session_limit = 100000
+
+# -----------------------------------------------------------------------------
+# Retry Policy
+# -----------------------------------------------------------------------------
+[retry_policy]
+max_retries = 3
+backoff_multiplier = 2.0
+
+[retry_policy.base_delay]
+secs = 1
+nanos = 0
+
+[retry_policy.max_delay]
+secs = 30
+nanos = 0
+
+# -----------------------------------------------------------------------------
+# Timeout Policy
+# -----------------------------------------------------------------------------
+[timeout_policy.default_timeout]
+secs = 120
+nanos = 0
+
+[timeout_policy.max_timeout]
+secs = 600
+nanos = 0
+
+# -----------------------------------------------------------------------------
+# Tool Executor (Local Commands)
+# -----------------------------------------------------------------------------
+[tool_executor]
+enabled = false             # Enable only if local tool execution is needed
+allowed_commands = ["ls", "cat", "git", "cargo", "rustc"]
+denied_commands = ["rm", "dd", "mkfs", "shutdown"]
+working_dir = "."
+dry_run = false
+max_stdout_bytes = 1048576   # 1 MiB
+max_stderr_bytes = 262144    # 256 KiB
+
+[tool_executor.timeout]
+secs = 30
+nanos = 0
+
+# -----------------------------------------------------------------------------
+# Policy Guard (Security)
+# -----------------------------------------------------------------------------
+[policy]
+enabled = true
+max_input_bytes = 100000
+enable_redaction = true
+suspicious_patterns = [
+    '(?i)ignore\s+(all\s+)?(previous|above)\s+instructions',
+    '(?i)system\s*:\s*you\s+are',
+    '(?i)disregard\s+(all\s+)?(prior|previous)',
+]

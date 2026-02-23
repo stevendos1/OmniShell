@@ -1,0 +1,40 @@
+# =============================================================================
+# OmniShell Orchestrator — Minimal YAML Configuration
+# =============================================================================
+# This is a minimal configuration with a single agent.
+
+config_version: "v1"
+max_concurrency: 4
+
+agents:
+  - id: "echo-agent"
+    display_name: "Echo Agent (for testing)"
+    binary: "echo"
+    base_args: ["{PROMPT}"]
+    input_mode: "arg"
+    prompt_placeholder: "{PROMPT}"
+    output_format: "text"
+    timeout_seconds: 10
+    max_concurrency: 2
+    priority: 1
+    capabilities:
+      - "general"
+      - "test"
+    enabled: true
+    env_vars: []
+
+cache:
+  enabled: true
+  max_entries: 100
+  max_bytes: 10485760  # 10 MiB
+  ttl_seconds: 600
+
+context:
+  max_messages: 20
+  max_bytes: 131072    # 128 KiB
+  max_tokens: 4000
+  enable_summarization: false
+
+token_budget:
+  per_request_limit: 4000
+  per_session_limit: 50000
