@@ -27,9 +27,7 @@ pub struct EnvSecretsProvider;
 impl SecretsProvider for EnvSecretsProvider {
     fn get_secret(&self, key: &str) -> Result<String> {
         debug!(key, "reading secret from environment");
-        std::env::var(key).map_err(|_| {
-            OrchestratorError::SecretsError(format!("secret '{key}' not found in environment"))
-        })
+        std::env::var(key).map_err(|_| OrchestratorError::SecretsError(format!("secret '{key}' not found in environment")))
     }
 }
 
