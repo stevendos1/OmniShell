@@ -24,9 +24,16 @@ impl DefaultPolicyGuard {
     pub fn new(config: PolicyConfig) -> Result<Self> {
         let mut compiled = Vec::new();
         for p in &config.suspicious_patterns {
-            compiled.push(Regex::new(p).map_err(|e| OrchestratorError::InvalidConfig(format!("pattern '{p}': {e}")))?);
+            compiled
+                .push(Regex::new(p).map_err(|e| {
+                    OrchestratorError::InvalidConfig(format!("pattern '{p}': {e}"))
+                })?);
         }
-        Ok(Self { config, compiled_patterns: compiled, allowed_tools: Vec::new() })
+        Ok(Self {
+            config,
+            compiled_patterns: compiled,
+            allowed_tools: Vec::new(),
+        })
     }
     pub fn with_allowed_tools(mut self, tools: Vec<String>) -> Self {
         self.allowed_tools = tools;
@@ -40,7 +47,11 @@ impl PolicyGuard for DefaultPolicyGuard {
             return Ok(PolicyCheckResult::pass());
         }
         if input.len() > self.config.max_input_bytes {
-            return Ok(PolicyCheckResult::fail(Severity::Critical, format!("size {} > {}", input.len(), self.config.max_input_bytes)).with_violation(PolicyViolation {
+            return Ok(PolicyCheckResult::fail(
+                Severity::Critical,
+                format!("size {} > {}", input.len(), self.config.max_input_bytes),
+            )
+            .with_violation(PolicyViolation {
                 kind: ViolationKind::SizeExceeded,
                 description: "input too large".into(),
                 redacted_content: None,
@@ -49,7 +60,11 @@ impl PolicyGuard for DefaultPolicyGuard {
         for (i, re) in self.compiled_patterns.iter().enumerate() {
             if re.is_match(input) {
                 warn!(pattern_index = i, "suspicious pattern in input");
-                return Ok(PolicyCheckResult::fail(Severity::Critical, "potential prompt injection").with_violation(PolicyViolation {
+                return Ok(PolicyCheckResult::fail(
+                    Severity::Critical,
+                    "potential prompt injection",
+                )
+                .with_violation(PolicyViolation {
                     kind: ViolationKind::PromptInjection,
                     description: format!("pattern #{i}"),
                     redacted_content: Some(self.redact(input)),
@@ -64,7 +79,11 @@ impl PolicyGuard for DefaultPolicyGuard {
             return Ok(PolicyCheckResult::pass());
         }
         if !self.allowed_tools.is_empty() && !self.allowed_tools.contains(&command.to_string()) {
-            return Ok(PolicyCheckResult::fail(Severity::Critical, format!("tool '{command}' denied")).with_violation(PolicyViolation {
+            return Ok(PolicyCheckResult::fail(
+                Severity::Critical,
+                format!("tool '{command}' denied"),
+            )
+            .with_violation(PolicyViolation {
                 kind: ViolationKind::ToolDenied,
                 description: format!("'{command}' denied"),
                 redacted_content: None,
@@ -78,11 +97,15 @@ impl PolicyGuard for DefaultPolicyGuard {
             return Ok(PolicyCheckResult::pass());
         }
         if output.len() > self.config.max_input_bytes * 2 {
-            return Ok(PolicyCheckResult::fail(Severity::Warning, "output too large").with_violation(PolicyViolation {
-                kind: ViolationKind::SizeExceeded,
-                description: "output exceeds size".into(),
-                redacted_content: None,
-            }));
+            return Ok(
+                PolicyCheckResult::fail(Severity::Warning, "output too large").with_violation(
+                    PolicyViolation {
+                        kind: ViolationKind::SizeExceeded,
+                        description: "output exceeds size".into(),
+                        redacted_content: None,
+                    },
+                ),
+            );
         }
         Ok(PolicyCheckResult::pass())
     }

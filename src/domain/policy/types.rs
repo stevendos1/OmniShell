@@ -15,11 +15,21 @@ pub struct PolicyCheckResult {
 
 impl PolicyCheckResult {
     pub fn pass() -> Self {
-        Self { allowed: true, severity: Severity::Info, reason: "passed all checks".to_string(), violations: Vec::new() }
+        Self {
+            allowed: true,
+            severity: Severity::Info,
+            reason: "passed all checks".to_string(),
+            violations: Vec::new(),
+        }
     }
 
     pub fn fail(severity: Severity, reason: impl Into<String>) -> Self {
-        Self { allowed: false, severity, reason: reason.into(), violations: Vec::new() }
+        Self {
+            allowed: false,
+            severity,
+            reason: reason.into(),
+            violations: Vec::new(),
+        }
     }
 
     pub fn with_violation(mut self, violation: PolicyViolation) -> Self {

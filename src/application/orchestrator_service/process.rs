@@ -21,29 +21,57 @@ impl Orchestrator for OrchestratorService {
         if !pr.allowed {
             return Err(OrchestratorError::PolicyViolation(pr.reason));
         }
-        let cur = self.context_manager.estimate_tokens(&request.session_id).await?;
+        let cur = self
+            .context_manager
+            .estimate_tokens(&request.session_id)
+            .await?;
         if let Some(max) = request.max_tokens {
             if cur > max {
-                return Err(OrchestratorError::TokenBudgetExceeded { used: cur, limit: max });
+                return Err(OrchestratorError::TokenBudgetExceeded {
+                    used: cur,
+                    limit: max,
+                });
             }
         }
-        let msg = Message { role: MessageRole::User, content: request.message.clone(), token_estimate: self.token_counter.count_tokens(&request.message), timestamp: chrono::Utc::now().timestamp() };
-        self.context_manager.add_message(&request.session_id, msg).await?;
+        let msg = Message {
+            role: MessageRole::User,
+            content: request.message.clone(),
+            token_estimate: self.token_counter.count_tokens(&request.message),
+            timestamp: chrono::Utc::now().timestamp(),
+        };
+        self.context_manager
+            .add_message(&request.session_id, msg)
+            .await?;
         let plan = self.planner.plan(&request).await?;
         info!(subtask_count = plan.subtasks.len(), "plan generated");
 
         let mut handles = Vec::new();
         for subtask in &plan.subtasks {
-            let agent_id = self.router.route(subtask.required_capability.name()).await?;
-            let agent = self.router.get_agent(&agent_id).await.ok_or_else(|| OrchestratorError::agent(&agent_id, "registered but not found"))?;
-            let (sem, cb, cache) = (self.concurrency_semaphore.clone(), self.circuit_breaker.clone(), self.cache.clone());
-            let (ctx_mgr, rp, tp) = (self.context_manager.clone(), self.retry_policy.clone(), self.timeout_policy.clone());
-            let (cfg_ver, sid, st) = (self.config_version.clone(), request.session_id.clone(), subtask.clone());
+            let agent_id = self
+                .router
+                .route(subtask.required_capability.name())
+                .await?;
+            let agent =
+                self.router.get_agent(&agent_id).await.ok_or_else(|| {
+                    OrchestratorError::agent(&agent_id, "registered but not found")
+                })?;
+            let sem = self.concurrency_semaphore.clone();
+            let params = super::worker::WorkerParams {
+                cb: self.circuit_breaker.clone(),
+                cache: self.cache.clone(),
+                ctx_mgr: self.context_manager.clone(),
+                rp: self.retry_policy.clone(),
+                tp: self.timeout_policy.clone(),
+                cfg_ver: self.config_version.clone(),
+            };
+            let (sid, st) = (request.session_id.clone(), subtask.clone());
             handles.push((
                 subtask.clone(),
                 tokio::spawn(async move {
-                    let _permit = sem.acquire().await.map_err(|_| OrchestratorError::NotImplemented("semaphore closed".into()))?;
-                    super::worker::execute_spawned(agent, st, sid, cb, cache, ctx_mgr, rp, tp, cfg_ver).await
+                    let _permit = sem.acquire().await.map_err(|_| {
+                        OrchestratorError::NotImplemented("semaphore closed".into())
+                    })?;
+                    super::worker::execute_spawned(agent, st, sid, params).await
                 }),
             ));
         }
@@ -64,22 +92,46 @@ impl Orchestrator for OrchestratorService {
         }
 
         let agg = self.aggregator.aggregate(&request.id, responses).await?;
-        let amsg = Message { role: MessageRole::Assistant, content: agg.content.clone(), token_estimate: self.token_counter.count_tokens(&agg.content), timestamp: chrono::Utc::now().timestamp() };
-        self.context_manager.add_message(&request.session_id, amsg).await?;
-        self.context_manager.trim_context(&request.session_id).await?;
-        info!(total_tokens = agg.total_tokens, cache_hits = agg.cache_stats.hits, "request complete");
+        let amsg = Message {
+            role: MessageRole::Assistant,
+            content: agg.content.clone(),
+            token_estimate: self.token_counter.count_tokens(&agg.content),
+            timestamp: chrono::Utc::now().timestamp(),
+        };
+        self.context_manager
+            .add_message(&request.session_id, amsg)
+            .await?;
+        self.context_manager
+            .trim_context(&request.session_id)
+            .await?;
+        info!(
+            total_tokens = agg.total_tokens,
+            cache_hits = agg.cache_stats.hits,
+            "request complete"
+        );
         Ok(agg)
     }
 
     async fn active_agents(&self) -> Result<Vec<String>> {
-        Ok(self.router.all_agent_info().await.into_iter().filter(|a| a.enabled).map(|a| a.id).collect())
+        Ok(self
+            .router
+            .all_agent_info()
+            .await
+            .into_iter()
+            .filter(|a| a.enabled)
+            .map(|a| a.id)
+            .collect())
     }
 
     async fn health_check(&self) -> Result<Vec<(String, bool)>> {
         let agents = self.router.all_agent_info().await;
         let mut results = Vec::new();
         for info in &agents {
-            let ok = if let Some(a) = self.router.get_agent(&info.id).await { a.health_check().await.is_ok() } else { false };
+            let ok = if let Some(a) = self.router.get_agent(&info.id).await {
+                a.health_check().await.is_ok()
+            } else {
+                false
+            };
             results.push((info.id.clone(), ok));
         }
         Ok(results)
@@ -89,7 +141,10 @@ impl Orchestrator for OrchestratorService {
 fn err_resp(st: &SubTask, msg: String) -> AgentResponse {
     AgentResponse {
         request_id: st.id.clone(),
-        agent_id: st.assigned_agent.clone().unwrap_or_else(|| "unknown".into()),
+        agent_id: st
+            .assigned_agent
+            .clone()
+            .unwrap_or_else(|| "unknown".into()),
         content: msg.clone(),
         structured_data: None,
         estimated_tokens: 0,

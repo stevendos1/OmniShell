@@ -40,5 +40,9 @@ async fn test_backpressure() {
 #[tokio::test]
 async fn test_dequeue_timeout() {
     let q = BoundedTaskQueue::new("test", 10);
-    assert!(q.dequeue(Duration::from_millis(50)).await.unwrap().is_none());
+    assert!(q
+        .dequeue(Duration::from_millis(50))
+        .await
+        .unwrap()
+        .is_none());
 }

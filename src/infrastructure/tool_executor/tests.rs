@@ -9,7 +9,10 @@ use std::time::Duration;
 fn make_config(allowed: &[&str], denied: &[&str]) -> ToolExecutorConfig {
     ToolExecutorConfig {
         enabled: true,
-        allowed_commands: allowed.iter().map(|s| s.to_string()).collect::<HashSet<_>>(),
+        allowed_commands: allowed
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<HashSet<_>>(),
         denied_commands: denied.iter().map(|s| s.to_string()).collect::<HashSet<_>>(),
         working_dir: PathBuf::from("/tmp"),
         timeout: Duration::from_secs(5),
@@ -52,27 +55,56 @@ fn test_sanitize_dangerous() {
 async fn test_disabled() {
     let mut c = make_config(&["ls"], &[]);
     c.enabled = false;
-    assert!(SecureToolExecutor::new(c).execute(ToolRequest { command: "ls".into(), args: vec![], working_dir: None, timeout: None }).await.is_err());
+    assert!(SecureToolExecutor::new(c)
+        .execute(ToolRequest {
+            command: "ls".into(),
+            args: vec![],
+            working_dir: None,
+            timeout: None
+        })
+        .await
+        .is_err());
 }
 
 #[tokio::test]
 async fn test_dry_run() {
     let mut c = make_config(&["ls"], &[]);
     c.dry_run = true;
-    let r = SecureToolExecutor::new(c).execute(ToolRequest { command: "ls".into(), args: vec!["-la".into()], working_dir: None, timeout: None }).await.unwrap();
+    let r = SecureToolExecutor::new(c)
+        .execute(ToolRequest {
+            command: "ls".into(),
+            args: vec!["-la".into()],
+            working_dir: None,
+            timeout: None,
+        })
+        .await
+        .unwrap();
     assert!(r.dry_run);
     assert!(r.stdout.contains("[dry-run]"));
 }
 
 #[tokio::test]
 async fn test_denied() {
-    assert!(SecureToolExecutor::new(make_config(&["ls"], &["rm"])).execute(ToolRequest { command: "rm".into(), args: vec!["-rf".into()], working_dir: None, timeout: None }).await.is_err());
+    assert!(SecureToolExecutor::new(make_config(&["ls"], &["rm"]))
+        .execute(ToolRequest {
+            command: "rm".into(),
+            args: vec!["-rf".into()],
+            working_dir: None,
+            timeout: None
+        })
+        .await
+        .is_err());
 }
 
 #[tokio::test]
 async fn test_execute_ls() {
     let r = SecureToolExecutor::new(make_config(&["ls"], &[]))
-        .execute(ToolRequest { command: "ls".into(), args: vec![], working_dir: Some(PathBuf::from("/tmp")), timeout: None })
+        .execute(ToolRequest {
+            command: "ls".into(),
+            args: vec![],
+            working_dir: Some(PathBuf::from("/tmp")),
+            timeout: None,
+        })
         .await
         .unwrap();
     assert_eq!(r.exit_code, 0);

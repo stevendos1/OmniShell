@@ -20,7 +20,9 @@ pub struct CapabilityRouter {
 
 impl CapabilityRouter {
     pub fn new() -> Self {
-        Self { agents: Arc::new(RwLock::new(HashMap::new())) }
+        Self {
+            agents: Arc::new(RwLock::new(HashMap::new())),
+        }
     }
     pub async fn register(&self, agent: Arc<dyn AiAgent>) {
         let id = agent.info().id.clone();
@@ -31,7 +33,12 @@ impl CapabilityRouter {
         self.agents.write().await.remove(agent_id);
     }
     pub async fn all_agent_info(&self) -> Vec<AgentInfo> {
-        self.agents.read().await.values().map(|a| a.info().clone()).collect()
+        self.agents
+            .read()
+            .await
+            .values()
+            .map(|a| a.info().clone())
+            .collect()
     }
     pub async fn get_agent(&self, agent_id: &str) -> Option<Arc<dyn AiAgent>> {
         self.agents.read().await.get(agent_id).cloned()
@@ -59,7 +66,8 @@ impl Router for CapabilityRouter {
                 }
             }
         }
-        best.map(|(id, _)| id.to_string()).ok_or_else(|| OrchestratorError::InvalidConfig(format!("no agent for '{capability}'")))
+        best.map(|(id, _)| id.to_string())
+            .ok_or_else(|| OrchestratorError::InvalidConfig(format!("no agent for '{capability}'")))
     }
 
     async fn all_matching(&self, capability: &str) -> Result<Vec<String>> {

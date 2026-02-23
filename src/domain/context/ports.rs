@@ -17,7 +17,12 @@ pub trait ContextManager: Send + Sync {
     async fn build_user_prompt(&self, session_id: &str) -> Result<String>;
 
     /// Build the full agent input combining system, context, and task.
-    async fn build_agent_input(&self, session_id: &str, task_description: &str, allowed_tools: &[String]) -> Result<String>;
+    async fn build_agent_input(
+        &self,
+        session_id: &str,
+        task_description: &str,
+        allowed_tools: &[String],
+    ) -> Result<String>;
 
     /// Trim the context to fit within configured limits.
     async fn trim_context(&self, session_id: &str) -> Result<()>;

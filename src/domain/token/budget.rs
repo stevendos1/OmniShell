@@ -34,7 +34,12 @@ impl TokenBudget {
     /// Try to consume `amount` tokens.
     pub fn consume(&mut self, amount: u64) -> Result<()> {
         if self.used + amount > self.limit {
-            return Err(crate::domain::error::OrchestratorError::TokenBudgetExceeded { used: self.used + amount, limit: self.limit });
+            return Err(
+                crate::domain::error::OrchestratorError::TokenBudgetExceeded {
+                    used: self.used + amount,
+                    limit: self.limit,
+                },
+            );
         }
         self.used += amount;
         Ok(())
@@ -54,6 +59,9 @@ pub struct TokenBudgetConfig {
 
 impl Default for TokenBudgetConfig {
     fn default() -> Self {
-        Self { per_request_limit: 8000, per_session_limit: 100_000 }
+        Self {
+            per_request_limit: 8000,
+            per_session_limit: 100_000,
+        }
     }
 }

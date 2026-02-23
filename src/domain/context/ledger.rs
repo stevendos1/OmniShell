@@ -41,6 +41,9 @@ impl Ledger {
     }
 
     pub fn byte_size(&self) -> usize {
-        self.entries.iter().map(|e| e.key.len() + e.value.len() + 64).sum()
+        self.entries
+            .iter()
+            .map(|e| e.key.len() + e.value.len() + 64)
+            .sum()
     }
 }

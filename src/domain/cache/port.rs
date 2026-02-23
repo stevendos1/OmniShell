@@ -12,5 +12,6 @@ pub trait Cache: Send + Sync {
     async fn remove(&self, key: &CacheKey) -> Result<()>;
     async fn clear(&self) -> Result<()>;
     async fn len(&self) -> Result<usize>;
+    async fn is_empty(&self) -> Result<bool>;
     async fn byte_size(&self) -> Result<usize>;
 }

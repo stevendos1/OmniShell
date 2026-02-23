@@ -30,7 +30,13 @@ pub struct BoundedTaskQueue {
 impl BoundedTaskQueue {
     pub fn new(name: impl Into<String>, capacity: usize) -> Self {
         let (tx, rx) = mpsc::channel(capacity);
-        Self { name: name.into(), queue_capacity: capacity, tx, rx: tokio::sync::Mutex::new(rx), pending: AtomicUsize::new(0) }
+        Self {
+            name: name.into(),
+            queue_capacity: capacity,
+            tx,
+            rx: tokio::sync::Mutex::new(rx),
+            pending: AtomicUsize::new(0),
+        }
     }
 }
 
@@ -38,8 +44,13 @@ impl BoundedTaskQueue {
 impl TaskQueue for BoundedTaskQueue {
     async fn enqueue(&self, task: SubTask) -> Result<()> {
         self.tx.try_send(task).map_err(|e| match e {
-            mpsc::error::TrySendError::Full(_) => OrchestratorError::QueueFull { queue_name: self.name.clone(), capacity: self.queue_capacity },
-            mpsc::error::TrySendError::Closed(_) => OrchestratorError::NotImplemented("channel closed".into()),
+            mpsc::error::TrySendError::Full(_) => OrchestratorError::QueueFull {
+                queue_name: self.name.clone(),
+                capacity: self.queue_capacity,
+            },
+            mpsc::error::TrySendError::Closed(_) => {
+                OrchestratorError::NotImplemented("channel closed".into())
+            }
         })?;
         self.pending.fetch_add(1, Ordering::SeqCst);
         Ok(())

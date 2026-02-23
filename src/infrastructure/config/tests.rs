@@ -48,7 +48,8 @@ env_vars = []
 
 #[test]
 fn test_yaml() {
-    let c = OrchestratorConfig::from_yaml("config_version: v1\nmax_concurrency: 6\nagents: []\n").unwrap();
+    let c = OrchestratorConfig::from_yaml("config_version: v1\nmax_concurrency: 6\nagents: []\n")
+        .unwrap();
     assert_eq!(c.max_concurrency, 6);
 }
 
