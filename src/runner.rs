@@ -22,6 +22,7 @@ use omnishell_orchestrator::infrastructure::config::OrchestratorConfig;
 use omnishell_orchestrator::infrastructure::lru_cache::LruCacheImpl;
 use omnishell_orchestrator::infrastructure::policy_guard::DefaultPolicyGuard;
 use omnishell_orchestrator::interface::cli::{self, Command, OutputFormat};
+use omnishell_orchestrator::interface::quickstart;
 
 pub async fn run(cli: cli::Cli, config: OrchestratorConfig) -> Result<(), OrchestratorError> {
     match cli.command {
@@ -29,6 +30,16 @@ pub async fn run(cli: cli::Cli, config: OrchestratorConfig) -> Result<(), Orches
             let s = toml::to_string_pretty(&config)
                 .map_err(|e| OrchestratorError::SerializationError(format!("{e}")))?;
             println!("{s}");
+            Ok(())
+        }
+        Command::Setup { output } => {
+            let mut generated = config;
+            generated.agents = quickstart::run_wizard().map_err(OrchestratorError::from)?;
+            let body = toml::to_string_pretty(&generated)
+                .map_err(|e| OrchestratorError::SerializationError(format!("{e}")))?;
+            std::fs::write(&output, body).map_err(OrchestratorError::from)?;
+            println!("Configuración guardada en {}", output.display());
+            println!("Tip: ejecuta `omnishell -c {} agents`", output.display());
             Ok(())
         }
         _ => run_orchestrator(cli, config).await,
@@ -133,6 +144,6 @@ async fn run_orchestrator(
             }
             Ok(())
         }
-        Command::Config => unreachable!(),
+        Command::Config | Command::Setup { .. } => unreachable!(),
     }
 }

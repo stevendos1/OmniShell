@@ -23,3 +23,12 @@ fn test_parse_health() {
     let cli = Cli::parse_from(["omnishell", "health"]);
     assert!(matches!(cli.command, Command::Health));
 }
+
+#[test]
+fn test_parse_setup_output() {
+    let cli = Cli::parse_from(["omnishell", "setup", "--output", "config/my.toml"]);
+    match cli.command {
+        Command::Setup { output } => assert_eq!(output, PathBuf::from("config/my.toml")),
+        _ => panic!("expected Setup"),
+    }
+}
