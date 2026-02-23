@@ -48,6 +48,12 @@ pub enum Command {
     Health,
     /// Show current configuration.
     Config,
+    /// Interactive setup to generate role-based agent mapping.
+    Setup {
+        /// Write generated config to this output file.
+        #[arg(long, default_value = "config/orchestrator-quickstart.toml")]
+        output: PathBuf,
+    },
 }
 
 /// Parse CLI arguments.

@@ -53,6 +53,20 @@ Y revisar health checks:
 cargo run -- -c config/orchestrator-dev.toml health
 ```
 
+También puedes usar el asistente interactivo para mapear roles (backend, frontend, tests, docs) a proveedores:
+
+```bash
+cargo run -- setup --output config/orchestrator-quickstart.toml
+```
+
+Luego ejecuta por capacidad para dirigir la tarea al rol correcto:
+
+```bash
+cargo run -- -c config/orchestrator-quickstart.toml run "Implementa API REST" --capability backend
+cargo run -- -c config/orchestrator-quickstart.toml run "Crea la UI del dashboard" --capability frontend
+cargo run -- -c config/orchestrator-quickstart.toml run "Escribe tests de integración" --capability tests
+```
+
 ## Uso del CLI
 
 Binario: `omnishell`
@@ -101,6 +115,15 @@ Ejecuta health check de cada agente configurado:
 ```bash
 omnishell -c config/orchestrator-dev.toml health
 ```
+
+#### `setup`
+Asistente interactivo para generar una configuración inicial más intuitiva por roles.
+
+```bash
+omnishell setup --output config/orchestrator-quickstart.toml
+```
+
+Te preguntará qué proveedor usar para cada rol (backend, frontend, tests, documentación) y escribirá un archivo TOML listo para usar.
 
 #### `config`
 Imprime configuración efectiva cargada:
