@@ -24,7 +24,11 @@ pub trait Router: Send + Sync {
 /// Port for aggregating multiple agent responses.
 #[async_trait::async_trait]
 pub trait Aggregator: Send + Sync {
-    async fn aggregate(&self, request_id: &str, responses: Vec<AgentResponse>) -> Result<AggregateResponse>;
+    async fn aggregate(
+        &self,
+        request_id: &str,
+        responses: Vec<AgentResponse>,
+    ) -> Result<AggregateResponse>;
 }
 
 /// The top-level orchestrator port.

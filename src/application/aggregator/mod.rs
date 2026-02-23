@@ -20,7 +20,9 @@ pub struct ConcatAggregator {
 
 impl ConcatAggregator {
     pub fn new(separator: impl Into<String>) -> Self {
-        Self { separator: separator.into() }
+        Self {
+            separator: separator.into(),
+        }
     }
 }
 
@@ -32,7 +34,11 @@ impl Default for ConcatAggregator {
 
 #[async_trait::async_trait]
 impl Aggregator for ConcatAggregator {
-    async fn aggregate(&self, request_id: &str, responses: Vec<AgentResponse>) -> Result<AggregateResponse> {
+    async fn aggregate(
+        &self,
+        request_id: &str,
+        responses: Vec<AgentResponse>,
+    ) -> Result<AggregateResponse> {
         let mut total_tokens = 0u64;
         let mut total_duration = std::time::Duration::ZERO;
         let mut cache_stats = CacheStats::default();
@@ -58,6 +64,14 @@ impl Aggregator for ConcatAggregator {
             contents.push(resp.content.clone());
         }
 
-        Ok(AggregateResponse { request_id: request_id.to_string(), content: contents.join(&self.separator), structured_data: None, worker_results, total_tokens, total_duration, cache_stats })
+        Ok(AggregateResponse {
+            request_id: request_id.to_string(),
+            content: contents.join(&self.separator),
+            structured_data: None,
+            worker_results,
+            total_tokens,
+            total_duration,
+            cache_stats,
+        })
     }
 }

@@ -23,7 +23,9 @@ pub struct InMemoryStore {
 
 impl InMemoryStore {
     pub fn new() -> Self {
-        Self { data: RwLock::new(HashMap::new()) }
+        Self {
+            data: RwLock::new(HashMap::new()),
+        }
     }
 }
 
@@ -36,14 +38,31 @@ impl Default for InMemoryStore {
 #[async_trait::async_trait]
 impl MemoryStore for InMemoryStore {
     async fn store(&self, ns: &str, key: &str, value: &str) -> Result<()> {
-        self.data.write().await.entry(ns.into()).or_default().insert(key.into(), value.into());
+        self.data
+            .write()
+            .await
+            .entry(ns.into())
+            .or_default()
+            .insert(key.into(), value.into());
         Ok(())
     }
     async fn retrieve(&self, ns: &str, key: &str) -> Result<Option<String>> {
-        Ok(self.data.read().await.get(ns).and_then(|m| m.get(key)).cloned())
+        Ok(self
+            .data
+            .read()
+            .await
+            .get(ns)
+            .and_then(|m| m.get(key))
+            .cloned())
     }
     async fn list_keys(&self, ns: &str) -> Result<Vec<String>> {
-        Ok(self.data.read().await.get(ns).map(|m| m.keys().cloned().collect()).unwrap_or_default())
+        Ok(self
+            .data
+            .read()
+            .await
+            .get(ns)
+            .map(|m| m.keys().cloned().collect())
+            .unwrap_or_default())
     }
     async fn delete(&self, ns: &str, key: &str) -> Result<()> {
         if let Some(m) = self.data.write().await.get_mut(ns) {

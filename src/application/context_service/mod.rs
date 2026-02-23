@@ -19,6 +19,11 @@ pub(crate) struct SessionContext {
 
 impl SessionContext {
     pub fn new() -> Self {
-        Self { messages: Vec::new(), ledger: Ledger::new(), total_tokens: 0, total_bytes: 0 }
+        Self {
+            messages: Vec::new(),
+            ledger: Ledger::new(),
+            total_tokens: 0,
+            total_bytes: 0,
+        }
     }
 }

@@ -13,6 +13,11 @@ pub struct ContextConfig {
 
 impl Default for ContextConfig {
     fn default() -> Self {
-        Self { max_messages: 100, max_bytes: 512 * 1024, max_tokens: 8000, enable_summarization: true }
+        Self {
+            max_messages: 100,
+            max_bytes: 512 * 1024,
+            max_tokens: 8000,
+            enable_summarization: true,
+        }
     }
 }

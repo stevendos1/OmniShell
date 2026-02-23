@@ -21,6 +21,6 @@ pub struct SimpleTokenCounter;
 impl TokenCounter for SimpleTokenCounter {
     fn count_tokens(&self, text: &str) -> u64 {
         let len = text.len() as u64;
-        (len + 3) / 4
+        len.div_ceil(4)
     }
 }

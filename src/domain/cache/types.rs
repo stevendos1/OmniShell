@@ -14,7 +14,12 @@ use serde::{Deserialize, Serialize};
 pub struct CacheKey(String);
 
 impl CacheKey {
-    pub fn compute(normalized_prompt: &str, relevant_context: &str, agent_id: &str, config_version: &str) -> Self {
+    pub fn compute(
+        normalized_prompt: &str,
+        relevant_context: &str,
+        agent_id: &str,
+        config_version: &str,
+    ) -> Self {
         use sha2::Digest;
         let mut hasher = sha2::Sha256::new();
         hasher.update(normalized_prompt.as_bytes());
@@ -53,6 +58,11 @@ pub struct CacheConfig {
 
 impl Default for CacheConfig {
     fn default() -> Self {
-        Self { enabled: true, max_entries: 1000, max_bytes: 50 * 1024 * 1024, ttl_seconds: 3600 }
+        Self {
+            enabled: true,
+            max_entries: 1000,
+            max_bytes: 50 * 1024 * 1024,
+            ttl_seconds: 3600,
+        }
     }
 }

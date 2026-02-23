@@ -31,7 +31,10 @@ impl FakeAgent {
             info: AgentInfo {
                 id: id.into(),
                 display_name: id.into(),
-                capabilities: caps.iter().map(|c| AgentCapability::new(*c)).collect::<HashSet<_>>(),
+                capabilities: caps
+                    .iter()
+                    .map(|c| AgentCapability::new(*c))
+                    .collect::<HashSet<_>>(),
                 max_concurrency: 2,
                 default_timeout: Duration::from_secs(30),
                 enabled: true,
@@ -53,7 +56,7 @@ impl AiAgent for FakeAgent {
             agent_id: self.info.id.clone(),
             content: self.response.clone(),
             structured_data: None,
-            estimated_tokens: (self.response.len() as u64 + 3) / 4,
+            estimated_tokens: (self.response.len() as u64).div_ceil(4),
             duration: Duration::from_millis(5),
             cache_hit: false,
             warnings: Vec::new(),
@@ -70,9 +73,12 @@ pub async fn build_orchestrator(agents: Vec<Arc<dyn AiAgent>>) -> impl Orchestra
     for a in agents {
         router.register(a).await;
     }
-    let planner: Arc<dyn Planner> = Arc::new(DeterministicPlanner::new(tc.clone(), "general".into()));
+    let planner: Arc<dyn Planner> =
+        Arc::new(DeterministicPlanner::new(tc.clone(), "general".into()));
     let agg: Arc<dyn Aggregator> = Arc::new(ConcatAggregator::default());
-    let ctx: Arc<dyn omnishell_orchestrator::domain::context::ContextManager> = Arc::new(InMemoryContextManager::new(ContextConfig::default(), tc.clone()));
+    let ctx: Arc<dyn omnishell_orchestrator::domain::context::ContextManager> = Arc::new(
+        InMemoryContextManager::new(ContextConfig::default(), tc.clone()),
+    );
     let cache: Arc<dyn Cache> = Arc::new(LruCacheImpl::new(Default::default()));
     let pg: Arc<dyn PolicyGuard> = Arc::new(DefaultPolicyGuard::new(Default::default()).unwrap());
     OrchestratorServiceBuilder::new()

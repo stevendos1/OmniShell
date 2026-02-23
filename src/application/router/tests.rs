@@ -15,7 +15,10 @@ impl FakeAgent {
             info: AgentInfo {
                 id: id.into(),
                 display_name: id.into(),
-                capabilities: caps.iter().map(|c| AgentCapability::new(*c)).collect::<HashSet<_>>(),
+                capabilities: caps
+                    .iter()
+                    .map(|c| AgentCapability::new(*c))
+                    .collect::<HashSet<_>>(),
                 max_concurrency: 2,
                 default_timeout: Duration::from_secs(60),
                 enabled,
@@ -31,7 +34,9 @@ impl AiAgent for FakeAgent {
         &self.info
     }
     async fn execute(&self, _: AgentRequest) -> OrcResult<AgentResponse> {
-        Err(crate::domain::error::OrchestratorError::NotImplemented("fake".into()))
+        Err(crate::domain::error::OrchestratorError::NotImplemented(
+            "fake".into(),
+        ))
     }
     async fn health_check(&self) -> OrcResult<()> {
         Ok(())
@@ -41,16 +46,24 @@ impl AiAgent for FakeAgent {
 #[tokio::test]
 async fn test_route_selects_highest_priority() {
     let router = CapabilityRouter::new();
-    router.register(Arc::new(FakeAgent::new("low", &["code-gen"], 1, true))).await;
-    router.register(Arc::new(FakeAgent::new("high", &["code-gen"], 10, true))).await;
+    router
+        .register(Arc::new(FakeAgent::new("low", &["code-gen"], 1, true)))
+        .await;
+    router
+        .register(Arc::new(FakeAgent::new("high", &["code-gen"], 10, true)))
+        .await;
     assert_eq!(router.route("code-gen").await.unwrap(), "high");
 }
 
 #[tokio::test]
 async fn test_route_skips_disabled() {
     let router = CapabilityRouter::new();
-    router.register(Arc::new(FakeAgent::new("off", &["code-gen"], 100, false))).await;
-    router.register(Arc::new(FakeAgent::new("on", &["code-gen"], 1, true))).await;
+    router
+        .register(Arc::new(FakeAgent::new("off", &["code-gen"], 100, false)))
+        .await;
+    router
+        .register(Arc::new(FakeAgent::new("on", &["code-gen"], 1, true)))
+        .await;
     assert_eq!(router.route("code-gen").await.unwrap(), "on");
 }
 
@@ -63,8 +76,17 @@ async fn test_route_no_match() {
 #[tokio::test]
 async fn test_all_matching_sorted() {
     let router = CapabilityRouter::new();
-    router.register(Arc::new(FakeAgent::new("a", &["cg"], 5, true))).await;
-    router.register(Arc::new(FakeAgent::new("b", &["cg"], 10, true))).await;
-    router.register(Arc::new(FakeAgent::new("c", &["cg"], 1, true))).await;
-    assert_eq!(router.all_matching("cg").await.unwrap(), vec!["b", "a", "c"]);
+    router
+        .register(Arc::new(FakeAgent::new("a", &["cg"], 5, true)))
+        .await;
+    router
+        .register(Arc::new(FakeAgent::new("b", &["cg"], 10, true)))
+        .await;
+    router
+        .register(Arc::new(FakeAgent::new("c", &["cg"], 1, true)))
+        .await;
+    assert_eq!(
+        router.all_matching("cg").await.unwrap(),
+        vec!["b", "a", "c"]
+    );
 }

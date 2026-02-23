@@ -44,7 +44,13 @@ fn test_parse_text() {
 
 #[test]
 fn test_parse_json() {
-    let r = parse::parse_output(r#"{"result": "extracted"}"#, OutputFormat::Json, "a", Some("result")).unwrap();
+    let r = parse::parse_output(
+        r#"{"result": "extracted"}"#,
+        OutputFormat::Json,
+        "a",
+        Some("result"),
+    )
+    .unwrap();
     assert_eq!(r, "extracted");
 }
 
@@ -56,6 +62,11 @@ fn test_parse_auto_fallback() {
 
 #[test]
 fn test_build_args_placeholder() {
-    let args = parse::build_args(&["--prompt".into(), "{PROMPT}".into()], InputMode::Arg, "hi", Some("{PROMPT}"));
+    let args = parse::build_args(
+        &["--prompt".into(), "{PROMPT}".into()],
+        InputMode::Arg,
+        "hi",
+        Some("{PROMPT}"),
+    );
     assert_eq!(args, vec!["--prompt", "hi"]);
 }

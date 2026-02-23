@@ -54,11 +54,23 @@ pub type Result<T> = std::result::Result<T, OrchestratorError>;
 impl OrchestratorError {
     /// Create an `AgentError` without an underlying source.
     pub fn agent(agent_id: impl Into<String>, message: impl Into<String>) -> Self {
-        Self::AgentError { agent_id: agent_id.into(), message: message.into(), source: None }
+        Self::AgentError {
+            agent_id: agent_id.into(),
+            message: message.into(),
+            source: None,
+        }
     }
 
     /// Create an `AgentError` with an underlying source.
-    pub fn agent_with_source(agent_id: impl Into<String>, message: impl Into<String>, source: impl std::error::Error + Send + Sync + 'static) -> Self {
-        Self::AgentError { agent_id: agent_id.into(), message: message.into(), source: Some(Box::new(source)) }
+    pub fn agent_with_source(
+        agent_id: impl Into<String>,
+        message: impl Into<String>,
+        source: impl std::error::Error + Send + Sync + 'static,
+    ) -> Self {
+        Self::AgentError {
+            agent_id: agent_id.into(),
+            message: message.into(),
+            source: Some(Box::new(source)),
+        }
     }
 }

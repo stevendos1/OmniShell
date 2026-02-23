@@ -19,7 +19,10 @@ fn make_response(agent_id: &str, content: &str, cache_hit: bool) -> AgentRespons
 #[tokio::test]
 async fn test_concat_aggregator() {
     let agg = ConcatAggregator::new(" | ");
-    let responses = vec![make_response("a", "Hello", false), make_response("b", "World", true)];
+    let responses = vec![
+        make_response("a", "Hello", false),
+        make_response("b", "World", true),
+    ];
     let result = agg.aggregate("req-1", responses).await.expect("ok");
     assert_eq!(result.content, "Hello | World");
     assert_eq!(result.total_tokens, 200);

@@ -7,7 +7,6 @@ use crate::domain::cache::{CacheEntry, CacheKey};
 /// A node in the LRU doubly-linked list.
 #[derive(Debug, Clone)]
 pub(crate) struct LruNode {
-    pub key: CacheKey,
     pub entry: CacheEntry,
     pub newer: Option<CacheKey>,
     pub older: Option<CacheKey>,
@@ -24,7 +23,12 @@ pub(crate) struct LruState {
 
 impl LruState {
     pub fn new() -> Self {
-        Self { map: HashMap::new(), newest: None, oldest: None, total_bytes: 0 }
+        Self {
+            map: HashMap::new(),
+            newest: None,
+            oldest: None,
+            total_bytes: 0,
+        }
     }
 
     pub fn unlink(&mut self, key: &CacheKey) {
